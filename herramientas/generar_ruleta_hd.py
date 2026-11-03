@@ -44,6 +44,7 @@ N_POP = 8                  # cuadros del "salto" del logo al ganar
 N_RELLENO = 10             # cuadros del relleno de color
 N_BRILLO = 6               # cuadros del brillo sobre el color
 ESCALAS_ENTRADA = [0.18, 0.42, 0.68, 0.9, 1.04, 1.05, 1.01]
+ESCALAS_SALIDA = [1.03, 1.06, 0.92, 0.7, 0.44, 0.2]   # se va como aparece (al reves)
 
 # Color de cada segmento (0 = arriba a la derecha y sigue en el sentido del reloj).
 # Mismo orden que config.yml: naranja, rosa, cian, rojo, morado, amarillo, azul, verde.
@@ -372,7 +373,6 @@ def cuadro_completo(U, V, R, cuadro=0, fase=0.0, aro_m=0, golpe=0, rell=None, co
         for s in range(8):
             i = (12 * s + cuadro) % CUADROS
             out = encima(out, tenir(gajo(U, V, i), COLORES[s]))
-            out = encima(out, marca(U, V, i, R['INT']))
     if rell is not None:
         out = encima(out, tenir(relleno(U, V, rell), color_rell))
     if brillo_k >= 0:
@@ -521,7 +521,6 @@ def main():
         print(clave, n, 'listos; piezas totales', F.n, flush=True)
 
     lote('GAJO', CUADROS, lambda i: (lambda U, V: gajo(U, V, i)), caja_gajo)
-    lote('MARCA', CUADROS, lambda i: (lambda U, V: marca(U, V, i, R['INT'])), caja_marca)
     caja_aro = (-R_ARO_OUT - 1.2, R_ARO_OUT + 1.2, -R_ARO_OUT - 1.2, R_ARO_OUT + 1.2)
     lote('ARO', 3, lambda m: (lambda U, V: aro(U, V, m)), lambda m: caja_aro)
     lote('FLECHA', 2, lambda g: (lambda U, V: flecha(U, V, g)), lambda g: (-4.3, 4.3, 15.6, 26.3))
@@ -546,6 +545,25 @@ def main():
         return (-(R_ARO_OUT + 1.3) * e, (R_ARO_OUT + 1.3) * e, -(R_ARO_OUT + 1.3) * e, 26.3 * e)
 
     lote('ENTRADA', len(ESCALAS_ENTRADA), entrada, caja_entrada)
+
+    # Salida: disco de color (se tine) + aro/logo/flecha (blanco), encogiendose con rebote
+    def caja_salida(k):
+        e = ESCALAS_SALIDA[k]
+        return (-(R_ARO_OUT + 1.3) * e, (R_ARO_OUT + 1.3) * e, -(R_ARO_OUT + 1.3) * e, 26.3 * e)
+
+    def salida_disco(k):
+        e = ESCALAS_SALIDA[k]
+        return lambda U, V: relleno(U / e, V / e, 1.0)
+
+    def salida_resto(k):
+        e = ESCALAS_SALIDA[k]
+        return lambda U, V: encima(encima(aro(U / e, V / e, 2), centro(U / e, V / e, R['LOGO'], 0.0)),
+                                   flecha(U / e, V / e, 0))
+
+    lote('SALIDA_DISCO', len(ESCALAS_SALIDA), salida_disco,
+         lambda k: (-(R_DISCO + 0.3) * ESCALAS_SALIDA[k], (R_DISCO + 0.3) * ESCALAS_SALIDA[k],
+                    -(R_DISCO + 0.3) * ESCALAS_SALIDA[k], (R_DISCO + 0.3) * ESCALAS_SALIDA[k]))
+    lote('SALIDA_RESTO', len(ESCALAS_SALIDA), salida_resto, caja_salida)
 
     # ---- fuente de Java
     carpeta_fuente = os.path.join(salida, 'java', 'assets', 'funkypunky', 'font')
@@ -572,6 +590,8 @@ def main():
             be_add(f'BE_RELLENO_{s}', cuadro=f, rell=p_rell(k), color_rell=COLORES[s], aro_m=2)
         be_add(f'BE_FINAL_{s}', rell=1.0, color_rell=COLORES[s], aro_m=2, con_gajos=False)
         be_add(f'BE_FINAL_{s}', rell=1.0, color_rell=COLORES[s], aro_m=2, con_gajos=False, pop=2)
+        for e in ESCALAS_SALIDA:
+            be_add(f'BE_SALIDA_{s}', escala=e, rell=1.0, color_rell=COLORES[s], aro_m=2, con_gajos=False)
     print('Bedrock: celdas', len(celdas), flush=True)
     assert len(celdas) <= 256
     pagina = Image.new('RGBA', (4096, 4096), (0, 0, 0, 0))
@@ -608,7 +628,7 @@ def main():
         L.append("    };")
     for clave in ['BE_GIRO', 'BE_ENTRADA']:
         L.append(f"    static final String[] {clave} = {{" + ", ".join(jstr(chr(c)) for c in be[clave]) + "};")
-    for clave in ['BE_RELLENO', 'BE_FINAL']:
+    for clave in ['BE_RELLENO', 'BE_FINAL', 'BE_SALIDA']:
         L.append(f"    static final String[][] {clave} = {{")
         for s in range(8):
             L.append("        {" + ", ".join(jstr(chr(c)) for c in be[f'{clave}_{s}']) + "},")

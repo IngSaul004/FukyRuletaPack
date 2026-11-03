@@ -30,7 +30,7 @@ def arr2(nombre):
     m = re.search(r'static final String\[\]\[\] ' + nombre + r' = \{(.*?)\n    \};', src, re.S)
     return [[bytes(s, 'ascii').decode('unicode_escape') for s in re.findall(r'"((?:\\u[0-9A-F]{4})*)"', fila)]
             for fila in re.findall(r'\{([^{}]*)\}', m.group(1))]
-SP = {k: arr(k) for k in ['GAJO', 'MARCA', 'ARO', 'FLECHA', 'LOGO', 'LOGO_POP', 'RELLENO', 'BRILLO', 'ENTRADA', 'BE_GIRO', 'BE_ENTRADA']}
+SP = {k: arr(k) for k in ['GAJO', 'ARO', 'FLECHA', 'LOGO', 'LOGO_POP', 'RELLENO', 'BRILLO', 'ENTRADA', 'SALIDA_DISCO', 'SALIDA_RESTO', 'BE_GIRO', 'BE_ENTRADA']}
 SP['BE_RELLENO'] = arr2('BE_RELLENO'); SP['BE_FINAL'] = arr2('BE_FINAL')
 COLORES = [int(x, 16) for x in re.findall(r'0x([0-9A-F]{6})', re.search(r'COLORES = \{(.*?)\}', src).group(1))]
 
@@ -62,7 +62,6 @@ def secuencia(seg=1, vueltas=2, duracion=180, pausa_inicio=12, latidos=3, pausa_
     aro_lento = lambda: (len(pasos) // 4) % 2
     def gajos(c, f):
         for s in range(8): c.append((SP['GAJO'][(12 * s + f) % 96], COLORES[s]))
-        for s in range(8): c.append((SP['MARCA'][(12 * s + f) % 96], 0xFFFFFF))
     def ruleta(f, aro, golpe):
         c = []; gajos(c, f)
         return c + [(SP['ARO'][aro], 0xFFFFFF), (logo(), 0xFFFFFF), (SP['FLECHA'][golpe], 0xFFFFFF)]
@@ -91,19 +90,12 @@ def secuencia(seg=1, vueltas=2, duracion=180, pausa_inicio=12, latidos=3, pausa_
             pasos.append(c)
     lleno = lambda: [(SP['RELLENO'][9], col), (SP['ARO'][aro_lento()], 0xFFFFFF), (logo(), 0xFFFFFF), (SP['FLECHA'][0], 0xFFFFFF)]
     for i in range(pausa_final): pasos.append(lleno())
-    pasos.append(lleno())
+    for k in range(len(SP['SALIDA_DISCO'])): pasos.append([(SP['SALIDA_DISCO'][k], col), (SP['SALIDA_RESTO'][k], 0xFFFFFF)])
     return pasos
 
 if __name__ == '__main__':
     os.makedirs(DEST, exist_ok=True)
     pasos = secuencia()
-    print('ticks', len(pasos), '=', len(pasos) / 20, 's (+0.9 s de desvanecido)')
+    print('ticks', len(pasos), '=', len(pasos) / 20, 's')
     for n, i in enumerate(range(len(pasos))):
         componer(pasos[i]).convert('RGB').save(os.path.join(DEST, f'f{n:04d}.png'))
-    # desvanecido (lo hace el juego): 18 cuadros
-    ult = componer(pasos[-1], fondo=(0, 0, 0, 0))
-    for k in range(18):
-        a = 1 - (k + 1) / 18
-        bg = Image.new('RGBA', ult.size, (58, 92, 64, 255))
-        u = ult.copy(); u.putalpha(u.getchannel('A').point(lambda v: int(v * a)))
-        bg.alpha_composite(u); bg.convert('RGB').save(os.path.join(DEST, f'f{len(pasos) + k:04d}.png'))
