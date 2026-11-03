@@ -520,6 +520,9 @@ def main():
             sprites[clave].append(F.sprite(f"{clave.lower()}_{k:02d}", func_de_k(k), caja_de_k(k)))
         print(clave, n, 'listos; piezas totales', F.n, flush=True)
 
+    solo_be = os.environ.get('SOLO_BEDROCK') == '1'   # solo rehace el mcpack (mismos caracteres)
+    if solo_be:
+        lote = lambda *a, **k: None
     lote('GAJO', CUADROS, lambda i: (lambda U, V: gajo(U, V, i)), caja_gajo)
     caja_aro = (-R_ARO_OUT - 1.2, R_ARO_OUT + 1.2, -R_ARO_OUT - 1.2, R_ARO_OUT + 1.2)
     lote('ARO', 3, lambda m: (lambda U, V: aro(U, V, m)), lambda m: caja_aro)
@@ -566,6 +569,8 @@ def main():
     lote('SALIDA_RESTO', len(ESCALAS_SALIDA), salida_resto, caja_salida)
 
     # ---- fuente de Java
+    if solo_be:
+        pass
     carpeta_fuente = os.path.join(salida, 'java', 'assets', 'funkypunky', 'font')
     os.makedirs(carpeta_fuente, exist_ok=True)
     with open(os.path.join(carpeta_fuente, 'ruleta.json'), 'w', encoding='utf-8') as f:
@@ -595,11 +600,13 @@ def main():
     print('Bedrock: celdas', len(celdas), flush=True)
     assert len(celdas) <= 256
     pagina = Image.new('RGBA', (4096, 4096), (0, 0, 0, 0))
-    lado = 2 * 27.6   # unidades que caben en la celda (centro de la ruleta en el centro)
+    # ZOOM_BE < 1 = ruleta mas chica dentro de la letra de Bedrock (en el celular se veia grande)
+    zoom_be = float(os.environ.get('ZOOM_BE', '0.8'))
+    lado = 2 * 27.6 / zoom_be   # unidades que caben en la celda (centro de la ruleta en el centro)
     n = 256
     g = (np.arange(n * SS) + 0.5) / (n * SS) * lado - lado / 2
     GU, GV = np.meshgrid(g, -g)
-    GV = GV + 2.4   # sube un poco el encuadre: la flecha sobresale arriba
+    GV = GV + 2.4 / zoom_be   # sube un poco el encuadre: la flecha sobresale arriba
     for idx, kw in enumerate(celdas):
         e = kw.pop('escala', 1.0)
         c = cuadro_completo((GU / e).astype(np.float32), (GV / e).astype(np.float32), R, **kw)
