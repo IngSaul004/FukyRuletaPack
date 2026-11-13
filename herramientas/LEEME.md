@@ -13,3 +13,18 @@ python3 -I simular.py salida 8 cuadros                    # vista previa cuadro 
 Si cambias colores, tamaños o numero de cuadros: vuelve a generar, copia `Sprites.java` al plugin,
 vuelve a armar el pack de Java (borrando `assets/funkypunky/textures/font/ruleta_hd` antes) y el mcpack,
 y sube la version del `manifest.json` de Bedrock.
+
+# Mascotas (BetterModel) sin pasar por el servidor
+
+`bb2bettermodel.py` genera las piezas de BetterModel (items `bettermodel:c/<modelo>_<hueso>`,
+modelos y texturas con prefijo `fp_`) igual que BetterModel 3.7.0 del servidor. Verificado contra
+el pack que generó el servidor (slime_bunny, blue_wizard, demon_knight: 63 de 63 piezas iguales,
+salvo redondeos de 0.000003).
+
+```
+python3 -I bb2bettermodel.py salida ../mascotas/appa.bbmodel ...
+```
+Después: descomprimir `FunkyPunky-Pack.zip`, copiar `salida/assets/bettermodel/` encima (sin pisar),
+volver a comprimir, calcular la SHA-1 y cambiar link + SHA-1 en `server.properties`.
+El mismo `.bbmodel` (mismo nombre de archivo) tiene que estar en `plugins/BetterModel/models/` del servidor.
+Los `.bbmodel` fuente de las mascotas nuevas están en `mascotas/`.
