@@ -1,0 +1,62 @@
+name: Armar resource packs
+
+# Cada vez que cambia una mascota, un pack o las herramientas, arma los zips de salida/
+# y los sube al repo. ForcePack los descarga de la rama main y calcula la SHA-1 solo.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'mascotas/**'
+      - 'packs/**'
+      - 'herramientas/armar_packs.py'
+      - 'herramientas/bb2bettermodel.py'
+      - '.github/workflows/armar-packs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: armar-packs
+  cancel-in-progress: false
+
+jobs:
+  armar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar numpy (lo usa bb2bettermodel.py)
+        run: pip install numpy
+
+      - name: Generar mascotas, revisar y comprimir
+        run: python3 -I herramientas/armar_packs.py
+
+      - name: Subir los packs al repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
+          git add packs salida
+          if git diff --cached --quiet; then
+            echo "Los packs no cambiaron."
+          else
+            git commit -m "Packs armados automáticamente"
+            git push
+          fi
+
+      - name: Resumen
+        run: |
+          {
+            echo "## Packs listos"
+            echo ""
+            echo '```'
+            cat salida/SHA1.txt
+            echo '```'
+            echo ""
+            echo "En el servidor: \`forcepack reload\` (espera ~5 min si GitHub todavía da el archivo viejo)."
+          } >> "$GITHUB_STEP_SUMMARY"

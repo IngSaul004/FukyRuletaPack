@@ -1,0 +1,80 @@
+{
+  "providers": [
+    {
+      "type": "bitmap",
+      "file": "minecraft:font/funky_icons.png",
+      "ascent": 7,
+      "height": 8,
+      "chars": [
+        "\ue000\ue001\ue002\ue003\ue004\ue005\ue006\ue007\ue008\ue009\ue00a\ue00b\ue00c\ue00d\ue00e"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "minecraft:font/funky_panel_tl.png",
+      "ascent": 14,
+      "height": 130,
+      "chars": [
+        "\ue0c1"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "minecraft:font/funky_panel_tm.png",
+      "ascent": 14,
+      "height": 130,
+      "chars": [
+        "\ue0c2"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "minecraft:font/funky_panel_tr.png",
+      "ascent": 14,
+      "height": 130,
+      "chars": [
+        "\ue0c3"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "minecraft:font/funky_panel_bl.png",
+      "ascent": -116,
+      "height": 129,
+      "chars": [
+        "\ue0c4"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "minecraft:font/funky_panel_bm.png",
+      "ascent": -116,
+      "height": 129,
+      "chars": [
+        "\ue0c5"
+      ]
+    },
+    {
+      "type": "bitmap",
+      "file": "minecraft:font/funky_panel_br.png",
+      "ascent": -116,
+      "height": 129,
+      "chars": [
+        "\ue0c6"
+      ]
+    },
+    {
+      "type": "space",
+      "advances": {
+        "\ue0a0": 120,
+        "\ue0a1": 90,
+        "\ue0f0": -300.5,
+        "\ue0f1": -1,
+        "\ue0f2": 1,
+        "\ue0f3": -4,
+        "\ue0f4": 4,
+        "\ue0f5": -601
+      }
+    }
+  ]
+}
